@@ -1,6 +1,6 @@
 require "kanal/application"
 
-Kanal::Application::Routing::RoutePack.configure do
+Kanal::RoutePack.configure do
   on :body, contains: "Get inside testing" do
     respond do
       body "You are inside testing route"

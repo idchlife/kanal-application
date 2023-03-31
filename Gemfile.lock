@@ -2,7 +2,6 @@ PATH
   remote: .
   specs:
     kanal-application (0.1.0)
-      kanal
 
 GEM
   remote: https://rubygems.pieq.space/
@@ -10,12 +9,15 @@ GEM
     ast (2.4.2)
     backport (1.2.0)
     benchmark (0.2.0)
+    debase (0.2.4.1)
+      debase-ruby_core_source (>= 0.10.2)
+    debase-ruby_core_source (3.2.0)
     diff-lcs (1.5.0)
     docile (1.4.0)
     e2mmap (0.1.0)
     jaro_winkler (1.5.4)
     json (2.6.2)
-    kanal (0.3.0)
+    kanal (0.4.3)
     kramdown (2.4.0)
       rexml
     kramdown-parser-gfm (1.1.0)
@@ -94,6 +96,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  debase
+  kanal (>= 0.4.3)
   kanal-application!
   rake (~> 13.0)
   rspec (~> 3.0)

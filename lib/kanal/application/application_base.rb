@@ -8,16 +8,14 @@ module Kanal
   module Application
     class Error < StandardError; end
 
-    RoutePacksDir = Struct.new(:path, :recursive)
-
     #
     # Base application class provides ability to extend it and implement
     # your own application
     #
     class ApplicationBase
-      include Kanal::Application::Helpers
-
       attr_reader :core
+
+      RoutePacksDirInfo = Struct.new(:path, :recursive)
 
       def initialize
         @route_packs_dirs = []
@@ -32,6 +30,14 @@ module Kanal
         Kanal::Application::Routing::RoutePackStorage.clear_routing_blocks
       end
 
+      #
+      # All application configuration happens here.
+      # Routes, plugins, interfaces, env dependent code, etc.
+      #
+      # @param env [Hash] env will be provided on app start
+      #
+      # @return [void] <description>
+      #
       def configure(env)
         raise NotImplementedError
       end
@@ -43,12 +49,14 @@ module Kanal
       # @param name [Symbol] <description>
       # @param &block [Proc] block will be provided with |core| argument
       #
-      # @return [<Type>] <description>
+      # @return [void] <description>
       #
       def register_interface(name, &block)
         if @interface_initialization_blocks.keys.include? name
           raise "Duplicate interface initializator named `#{name}`. Please specify another name"
         end
+
+        @interface_initialization_blocks[name] = block
       end
 
       #
@@ -63,10 +71,23 @@ module Kanal
         @enabled_interface_name = name
       end
 
-      def add_route_packs_dir(path, recursive = false)
-        return if @route_packs_dirs.include? path
-
-        @route_packs_dirs << path
+      #
+      # Add directory filled with route pack files which use
+      # Kanal::Application::Routing::RoutePack.configure do; end for configuring routes
+      # Recursive option is true by default
+      #
+      # WARNING: there is no duplicate route pack files check,
+      # so it's better to add one/several independent directories
+      # If you add same directory multiple times - it will probably
+      # give you duplicated routes
+      #
+      # @param path [String] <description>
+      # @param recursive [Boolean] <description>
+      #
+      # @return [void] <description>
+      #
+      def add_route_packs_dir(path, recursive: true)
+        @route_packs_dirs << RoutePacksDirInfo.new(path, recursive)
       end
 
       #
@@ -99,13 +120,19 @@ module Kanal
         # KANAL_ENV variable should be always defined
         env[:KANAL_ENV] = :dev unless env.key? :KANAL_ENV
 
+        # Convert kanal environment to symbol, because KANAL_ENV should always be symbol
+        env[:KANAL_ENV] = env[:KANAL_ENV].to_sym
+
         # Creating core
         @core = Kanal::Core::Core.new
 
+        # Using configuration provided by dev
         configure env
 
+        # Loading route pack files from dires
         load_route_packs_dirs
 
+        # Getting routing blocks from route pack storage
         routing_blocks = Kanal::Application::Routing::RoutePackStorage.routing_blocks
 
         # Adding routing blocks to router configuration
@@ -115,11 +142,11 @@ module Kanal
       end
 
       def load_route_packs_dirs
-        @route_packs_dirs.each do |dir|
-          FileLoader.load_ruby_files_from_dir dir
+        @route_packs_dirs.each do |dir_info|
+          Kanal::Application::Helpers::FileLoader.load_ruby_files_from_dir dir_info.path, recursive: dir_info.recursive
+        rescue Exception => e
+          raise "Error loading route packs from dir #{dir_info.path}. More info about the error: #{e.full_message}"
         end
-      rescue Exception => e
-        raise "Error loading route packs #{dir}. More info about the error: #{e}"
       end
     end
   end

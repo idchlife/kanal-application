@@ -6,7 +6,7 @@ module Kanal
   module Application
     module Routing
       #
-      # This module can be used to register routing blocks in any files
+      # This module can be used to register routing blocks in separate files
       #
       module RoutePack
         class << self

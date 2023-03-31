@@ -6,11 +6,8 @@ module Kanal
   module Application
   end
 
-  module RoutePack
-    include Kanal::Application::Routing::RoutePack
-  end
+  # Shortcuts
+  RoutePack = Kanal::Application::Routing::RoutePack
 
-  module ApplicationBase
-    include Kanal::Application::ApplicationBase
-  end
+  ApplicationBase = Kanal::Application::ApplicationBase
 end
